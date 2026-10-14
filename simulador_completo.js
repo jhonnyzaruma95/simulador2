@@ -54,8 +54,10 @@
     let apellido = recuperaraTexto("txtApellido");
     let ingresos = recuperarInt("txtIngresos");
     let egresos = recuperarInt("txtEgresos");
-  
 
+    let clienteExistente = buscarCliente(cedula);
+    if(clienteExistente == null){
+  //Si no existe--crear cliente nuevo
   //objeto cliente
   let cliente = {
     cedula: cedula,
@@ -66,7 +68,20 @@
   }
 
   clientes.push(cliente);
+  alert("Cliente guardado correctamente");
+    }else {
+      //Si existe --Actualizar(excepto cedula)
+      clienteExistente.nombre = nombre;
+      clienteExistente.apellido = apellido;
+      clienteExistente.ingresos= ingresos;
+      clienteExistente.egresos= egresos;
+      //la cedula no se toca
+      alert("Cliente actualizado correctamente");
+    }
+
   pintarClientes();
+  limpiar(); // limpiar despues de guardar
+  document.getElementById("txtCedula").disabled = false;
 }
 
 
@@ -83,12 +98,52 @@
         "<td>"+elementoCliente.egresos+"</td>"+
 
         "<td><button onclick='seleccionarCliente(\""+ elementoCliente.cedula + "\")'>Actualizar</button>" +
-        "</tr>"
+        "</td></tr>"
     }
     cmpTabla.innerHTML = contenidoTabla;
   }
 
- 
- 
+  buscarCliente = function(cedula){
+    let elementoCliente;
+    let clienteEncontrado = null;
 
+    for(let i=0; i<clientes.length; i++){
+        elementoCliente = clientes[i];
+        if(elementoCliente.cedula == cedula){
+            clienteEncontrado = elementoCliente;
+            break;
+        }
+    }
+    return clienteEncontrado;
+  }
+ 
+  seleccionarCliente = function(cedula){
+  //cedula = recuperaraTexto("txtCedula");
+  let cliente = buscarCliente(cedula);
+  clienteSeleccionado = cliente;
+
+  if(clienteSeleccionado != null){
+    mostrarTextoEnCaja("txtCedula", clienteSeleccionado.cedula);
+    document.getElementById("txtCedula").disabled = true;
+    mostrarTextoEnCaja("txtNombre", clienteSeleccionado.nombre);
+    mostrarTextoEnCaja("txtApellido", clienteSeleccionado.apellido);
+    mostrarTextoEnCaja("txtIngresos", clienteSeleccionado.ingresos);
+    mostrarTextoEnCaja("txtEgresos", clienteSeleccionado.egresos);
+    }
+  }
+
+  limpiar = function(){
+  mostrarTextoEnCaja("txtCedula", "");
+  mostrarTextoEnCaja("txtNombre", "");
+  mostrarTextoEnCaja("txtApellido", "");
+  mostrarTextoEnCaja("txtIngresos", "");
+  mostrarTextoEnCaja("txtEgresos", "");
+
+   document.getElementById("txtCedula").focus();
+}
+
+  
+
+  
+ 
 
