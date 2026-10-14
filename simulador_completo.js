@@ -98,6 +98,7 @@
         "<td>"+elementoCliente.egresos+"</td>"+
 
         "<td><button onclick='seleccionarCliente(\""+ elementoCliente.cedula + "\")'>Actualizar</button>" +
+        "<button onclick='eliminarCliente(\"" + elementoCliente.cedula + "\")'>Eliminar</button></td>" +
         "</td></tr>"
     }
     cmpTabla.innerHTML = contenidoTabla;
@@ -142,7 +143,17 @@
    document.getElementById("txtCedula").focus();
 }
 
-  
+  eliminarCliente = function(cedula){
+  let clienteEncontrado = buscarCliente(cedula);
+  let indice = clientes.indexOf(clienteEncontrado);
+  if(indice != -1){
+  clientes.splice(indice, 1);
+  pintarClientes();
+  limpiar();
+}
+}
+
+
 
   
  
