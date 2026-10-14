@@ -1,5 +1,7 @@
 
-  let clientes = [];
+  let clientes = [{ cedula: "1712345678", nombre: "Juan", apellido: "Pérez", ingresos: 1200, egresos: 500 },
+{ cedula: "1723456789", nombre: "María", apellido: "Gómez", ingresos: 1500, egresos: 600 },
+{ cedula: "1734567890", nombre: "Carlos", apellido: "Ramírez", ingresos: 900, egresos: 350 }];
   let creditos = [];
 
   let tasaInteres = 15;
@@ -45,4 +47,48 @@
 
     }
   }
+
+  guardarCliente = function(){
+    let cedula = recuperaraTexto("txtCedula");
+    let nombre = recuperaraTexto("txtNombre");
+    let apellido = recuperaraTexto("txtApellido");
+    let ingresos = recuperarInt("txtIngresos");
+    let egresos = recuperarInt("txtEgresos");
+  
+
+  //objeto cliente
+  let cliente = {
+    cedula: cedula,
+    nombre: nombre,
+    apellido: apellido,
+    ingresos: ingresos,
+    egresos: egresos
+  }
+
+  clientes.push(cliente);
+  pintarClientes();
+}
+
+
+  pintarClientes = function(){
+    let cmpTabla = document.getElementById("tablaClientes");
+    let elementoCliente;
+    let contenidoTabla = "";
+    for(i=0; i<clientes.length; i++){
+        elementoCliente = clientes[i];
+        contenidoTabla += "<tr><td>"+elementoCliente.cedula+"</td>"+
+        "<td>"+elementoCliente.nombre+"</td>"+
+        "<td>"+elementoCliente.apellido+"</td>"+
+        "<td>"+elementoCliente.ingresos+"</td>"+
+        "<td>"+elementoCliente.egresos+"</td>"+
+
+        "<td><button onclick='seleccionarCliente(\""+ elementoCliente.cedula + "\")'>Actualizar</button>" +
+        "</tr>"
+    }
+    cmpTabla.innerHTML = contenidoTabla;
+  }
+
+ 
+ 
+
 
