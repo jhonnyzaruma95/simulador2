@@ -33,6 +33,7 @@
     document.getElementById("parametros").classList.remove("activa");
     document.getElementById("clientes").classList.remove("activa");
     document.getElementById("creditos").classList.remove("activa");
+    document.getElementById("listaCreditos").classList.remove("activa");
     
   }
 
@@ -241,7 +242,7 @@
     // Mostrar el detalle en resultadoCredito
     let resultado = `
         <h3>Resultado del Cálculo</h3>
-        <p><strong>Tasa de interes:</strong> $${tasaInteres}%</p>
+        <p><strong>Tasa de interes:</strong> ${tasaInteres}%</p>
         <p><strong>Disponible:</strong> $${montoDisponible.toFixed(2)}</p>
         <p><strong>Capacidad de Pago:</strong> $${capacidadPago.toFixed(2)}</p>
         <p><strong>Interés:</strong> $${interes.toFixed(2)}</p>
@@ -255,6 +256,120 @@
 
     btnSolicitar.disabled = !creditoAprobado;
 };
+
+// 3. FUNCIÓN PARA SOLICITAR
+  asignarCredito = function(){
+   if (clienteActual == null || !creditoAprobado || cuotaCalculada <= 0) {
+        alert("Primero calcula y aprueba el crédito.");
+        return;
+    }
+  
+  let nuevoCredito = {
+    cedula: clienteActual.cedula,
+    nombre: clienteActual.nombre,
+    apellido: clienteActual.apellido,
+    monto: montoCalculado,
+    tasa: tasaInteres,
+    plazo: (plazoCalculado * 12) +  " meses ",
+    cuota: cuotaCalculada.toFixed(2)
+  };
+  
+  creditos.push(nuevoCredito);
+  pintarCreditos(creditos); // ← pinta la tabla
+  alert("Crédito registrados correctamente.");
+  
+  // Limpiar
+  document.getElementById("btnSolicitarCredito").disabled = true;
+  document.getElementById("resultadoCredito").innerHTML = "";
+  document.getElementById("resultadoCredito").className = "";
+  document.getElementById("datosClienteCredito").innerHTML = "";
+  document.getElementById("buscarCedulaCredito").value = "";
+  document.getElementById("montoCredito").value = "";
+  document.getElementById("plazoCredito").value = "";
+
+  clienteActual = null;
+  creditoAprobado = false;
+  cuotaCalculada = 0;
+}
+buscarCreditos = function(cedula){
+    let creditosEncontrados = [];
+
+    for(let i = 0; i < creditos.length; i++){
+        if(creditos[i].cedula === cedula){
+            creditosEncontrados.push(creditos[i]);
+        }
+    }
+
+    return creditosEncontrados;
+}
+
+ pintarCreditos = function(listaCreditos) {
+  let cmpTabla = document.getElementById("tablaCreditos");
+  let contenidoTabla = "";
+  for(let i=0; i<listaCreditos.length; i++){
+    let c = listaCreditos[i];
+
+    // Buscar la posición real en el arreglo original
+        let indiceReal = creditos.indexOf(c);
+    
+    contenidoTabla += `
+      <tr>
+        <td>${c.cedula}</td>
+        <td>${c.nombre}</td>
+        <td>${c.apellido}</td>
+        <td>${Number(c.monto).toFixed(2)}</td>
+        <td>${c.tasa}%</td>
+        <td>${c.plazo}</td>
+        <td>${Number(c.cuota).toFixed(2)}</td>
+        <td><button onclick="eliminarCredito(${indiceReal})">Eliminar</button></td>
+      </tr>
+    `;
+  }
+  cmpTabla.innerHTML = contenidoTabla;
+}
+
+  eliminarCredito = function(indice){
+     if (indice < 0 || indice >= creditos.length) {
+        return;
+    }
+
+    let confirmar = confirm("¿Deseas eliminar este crédito?");
+
+    if (confirmar) {
+        creditos.splice(indice, 1);
+        pintarCreditos(creditos);
+    }
+}
+
+  buscarCreditosCliente = function(){
+    let cedula = document.getElementById("buscarCedulaListado").value;
+    
+    if (cedula === "") {
+        alert("Ingresa una cédula para buscar.");
+        return;
+    }
+
+    let creditosFiltrados = creditos.filter(c => c.cedula === cedula);
+    
+    if (creditosFiltrados.length === 0) {
+      document.getElementById("tablaCreditos").innerHTML = "";
+      alert("No hay créditos registrados para esa cédula");
+        
+      return;
+    }
+
+    pintarCreditos(creditosFiltrados); // Reusa la misma función
+}
+
+pintarClientes();
+pintarCreditos(creditos);
+mostrarSeccion("parametros")
+
+mostrarTodosLosCreditos = function() {
+    document.getElementById("buscarCedulaListado").value = "";
+    pintarCreditos(creditos);
+};
+
 
   
  
