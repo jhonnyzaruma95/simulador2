@@ -33,6 +33,7 @@
     document.getElementById("parametros").classList.remove("activa");
     document.getElementById("clientes").classList.remove("activa");
     document.getElementById("creditos").classList.remove("activa");
+    
   }
 
   mostrarSeccion = function(id){
@@ -40,16 +41,20 @@
     document.getElementById(id).classList.add("activa");
   }
 
-  guardarTasa = function(){
-    let cmpTasaInteres = document.getElementById("tasaInteres");
-    let tasa = parseInt(cmpTasaInteres.value);
-    if(tasa >= 10 && tasa <=20){
-      document.getElementById("mensajeTasa").innerHTML = "Tasa configurada correctamente: " + tasa + "%";
-    }else {
-      document.getElementById("mensajeTasa").innerHTML = "Error: La tasa debe estar entre 10% y 20%";
+  guardarTasa = function (){
+    let tasa = recuperarFloat("tasaInteres");
+    let mensaje = document.getElementById("mensajeTasa");
 
+    if (isNaN(tasa) || tasa < 10 || tasa > 20) {
+        mensaje.innerText = "Error: la tasa debe estar entre 10% y 20%.";
+        return;
     }
-  }
+
+    tasaInteres = tasa;
+
+    mensaje.innerText =
+        "Tasa configurada correctamente: " + tasaInteres + "%";
+}
 
   guardarCliente = function(){
     let cedula = recuperaraTexto("txtCedula");
@@ -195,10 +200,16 @@
 // Usar tus funciones antiguas: calcularDisponible, calcularCapacidadPago, etc,
    calcularCredito = function(){
     let cmpResultado = document.getElementById("resultadoCredito");
-    
+    let btnSolicitar = document.getElementById("btnSolicitarCredito");
+
+    cmpResultado.className = "";
+    btnSolicitar.disabled = true;
+    creditoAprobado = false;
+    cuotaCalculada = 0;
+
     // Validar que ya se buscó un cliente
     if (clienteActual == null) {
-        cmpResultado.innerHTML = `<p style="color: red;">Primero busca un cliente</p>`;
+        cmpResultado.innerText = "Primero busca un cliente.";
         return;
     }
 
@@ -207,142 +218,43 @@
     let egresos = clienteActual.egresos;   // Del cliente, no de input
     let monto = parseFloat(document.getElementById("montoCredito").value);
     let plazoAnios = parseInt(document.getElementById("plazoCredito").value);
-    let tasa = 12;
 
     // Validar monto y plazo
     if (isNaN(monto) || isNaN(plazoAnios) || monto <= 0 || plazoAnios <= 0) {
-        cmpResultado.innerHTML = `<p style="color: red;">Ingresa monto y plazo válidos</p>`;
-        cmpResultado.className = "";
+        cmpResultado.innerText = "Ingresa monto y plazo válidos.";
         return;
     }
 
     // Usar TODAS tus funciones antiguas de funciones.js
     let montoDisponible = calcularDisponible(ingresos, egresos);
     let capacidadPago = calcularCapacidadPago(montoDisponible);
-    let interes = calcularInteresSimple(monto, tasa, plazoAnios);
+    let interes = calcularInteresSimple(monto, tasaInteres, plazoAnios);
     let totalPagar = calcularTotalPagar(monto, interes);
     let cuotaMensual = calcularCuotaMensual(totalPagar, plazoAnios);
+
+    cuotaCalculada = cuotaMensual;
+    montoCalculado = monto;
+    plazoCalculado = plazoAnios;
+
+    creditoAprobado = aprobarCredito(capacidadPago, cuotaMensual);
 
     // Mostrar el detalle en resultadoCredito
     let resultado = `
         <h3>Resultado del Cálculo</h3>
+        <p><strong>Tasa de interes:</strong> $${tasaInteres}%</p>
         <p><strong>Disponible:</strong> $${montoDisponible.toFixed(2)}</p>
         <p><strong>Capacidad de Pago:</strong> $${capacidadPago.toFixed(2)}</p>
         <p><strong>Interés:</strong> $${interes.toFixed(2)}</p>
         <p><strong>Total a Pagar:</strong> $${totalPagar.toFixed(2)}</p>
         <p><strong>Cuota Mensual:</strong> $${cuotaMensual.toFixed(2)}</p>
+        <p><strong>RESULTADO: ${creditoAprobado ? "APROBADO" : "RECHAZADO"}</strong></p>
     `;
-
-    // Aprobar o rechazar con tu función antigua
-    let fueAprobado = aprobarCredito(capacidadPago, cuotaMensual);
-    if (fueAprobado) {
-        resultado += `<p><strong>¡¡CREDITO APROBADO!!</strong></p>`;
-        cmpResultado.className = "aprobado";
-        document.getElementById("btnSolicitarCredito").disabled = false;
-    } else {
-        resultado += `<p><strong>¡¡CREDITO RECHAZADO!!</strong></p>`;
-        cmpResultado.className = "rechazado";
-        document.getElementById("btnSolicitarCredito").disabled = true;
-    }
 
     cmpResultado.innerHTML = resultado;
-}
+    cmpResultado.className = creditoAprobado ? "aprobado" : "rechazado";
 
-// 3. FUNCIÓN PARA SOLICITAR
-  solicitarCredito = function(){
-  if(clienteActual == null){
-    alert("Busca un cliente primero");
-    return;
-  }
-  
-  let monto = recuperarFloat("montoCredito");
-  let plazoAnios = recuperarInt("plazoCredito");
-  
-  let nuevoCredito = {
-    cedula: clienteActual.cedula,
-    nombre: clienteActual.nombre,
-    apellido: clienteActual.apellido,
-    monto: monto,
-    tasa: tasaInteres,
-    plazo: plazoAnios * 12 + " meses",
-    cuota: cuotaCalculada.toFixed(2)
-  };
-  
-  creditos.push(nuevoCredito);
-  pintarCreditos(creditos); // ← pinta la tabla
-  alert("Crédito registrado para: " + clienteActual.nombre);
-  
-  // Limpiar
-  document.getElementById("btnSolicitarCredito").disabled = true;
-  document.getElementById("resultadoCredito").innerHTML = "";
-  document.getElementById("montoCredito").value = "";
-  document.getElementById("plazoCredito").value = "";
-}
-
- pintarCreditos = function(listaCreditos) {
-  let cmpTabla = document.getElementById("tablaCreditos");
-  let contenidoTabla = "";
-  for(let i=0; i<listaCreditos.length; i++){
-    let c = listaCreditos[i];
-    contenidoTabla += `
-      <tr>
-        <td>${c.cedula}</td>
-        <td>${c.nombre}</td>
-        <td>${c.apellido}</td>
-        <td>${c.monto}</td>
-        <td>${c.tasa}%</td>
-        <td>${c.plazo}</td>
-        <td>${c.cuota}</td>
-        <td><button onclick="eliminarCredito(${i})">Eliminar</button></td>
-      </tr>
-    `;
-  }
-  cmpTabla.innerHTML = contenidoTabla;
-}
-
-   eliminarCredito = function(){
-    if (clienteActual == null) {
-        alert("Primero busca un cliente para eliminar");
-        return;
-    }
-
-    let confirmar = confirm(`¿Seguro que quieres eliminar a ${clienteActual.nombre} ${clienteActual.apellido}?`);
-    
-    if (confirmar) {
-        let indice = clientes.findIndex(c => c.cedula === clienteActual.cedula);
-        
-        if (indice !== -1) {
-            clientes.splice(indice, 1); 
-            alert("Cliente eliminado correctamente");
-            
-            // Limpiar pantalla
-            clienteActual = null;
-            document.getElementById("datosClienteCredito").innerHTML = "";
-            document.getElementById("resultadoCredito").innerHTML = "";
-            document.getElementById("resultadoCredito").className = "";
-            document.getElementById("buscarCedulaCredito").value = "";
-        }
-    }
-}
-
-    buscarCreditosCliente = function(){
-    let cedula = document.getElementById("buscarCedulaListado").value;
-    
-    if (cedula === "") {
-        alert("Ingresa una cédula");
-        return;
-    }
-
-    let creditosFiltrados = creditos.filter(c => c.cedula === cedula);
-    
-    if (creditosFiltrados.length === 0) {
-        alert("No hay créditos para esa cédula");
-        document.getElementById("tablaCreditos").innerHTML = "";
-        return;
-    }
-
-    pintarCreditos(creditosFiltrados); // Reusa la misma función
-}
+    btnSolicitar.disabled = !creditoAprobado;
+};
 
   
  
